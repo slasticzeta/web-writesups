@@ -1,4 +1,4 @@
-# 02. Open Redirect — 불완전한 same-site 검사 우회
+# 02. Open Redirect
 
 ## 문제 설명
 `next` 파라미터로 이동시키는 `/go` 엔드포인트가 있고, "외부 도메인으로 리다이렉트를
