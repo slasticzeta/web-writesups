@@ -24,6 +24,7 @@ admin'-- -
 ```sql
 SELECT userid FROM sqli1_table WHERE userid='admin'-- -' AND userpw='x'
 ```
+![admin 인증 우회로 flag 출력](./images/05_sqli_flag.png)
 
 ## 플래그
 ```
