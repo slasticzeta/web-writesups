@@ -26,7 +26,6 @@ XML의 외부 엔티티(`SYSTEM`)를 정의하면 서버의 파일을 읽어 문
 <order><name>&xxe;</name></order>
 ```
 `&xxe;`가 `/flag.txt`의 내용으로 치환되어 응답에 flag가 출력된다.
-/order
 
 ![XXE로 flag.txt 내용 출력](./images/15_xxe_flag.png)
 
