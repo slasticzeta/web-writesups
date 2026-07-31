@@ -44,4 +44,4 @@ SELECT userid FROM sqli2_table WHERE userid='' like('adm%')#' AND userpw='x'
 ## 플래그
 ```
 flag{b715e24914d597b86ce5}
-``'
+```
