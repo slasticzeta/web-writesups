@@ -46,7 +46,7 @@ if (cmd != null) {
 http://edu.arang.kr:9602/uploads/shell.jspx?cmd=cat%20/flag
 ```
 
-![flag 출력](./images/20_ssti_flag.png)
+![flag 출력](./images/20_flag.png)
 
 ## 플래그
 
